@@ -1,50 +1,57 @@
 <div class="dialog-background"></div>
-<form method="post" action="?module=products&action=addToCategories">
+<form id="mergerorder-form" method="post" action="?plugin=mergerorder&action=merge">
+    {$wa->csrf()}
     <div class="dialog-window">
         <div class="dialog-content">
             <div class="dialog-content-indent">
+                
+                <h1>Объединение заказа {$order.id_str}</h1>
+                <input type="hidden" name="order_id" value="{$order.id}"/>
+                
                 <table class="zebra single-lined padded" id="order-list">
                     <thead>
                         <tr class="header">
                             <th><input type="checkbox" class="s-select-all"></th>
-                            <th colspan="2"></th>
-                            <th>[`Customer`]</th>
-                            <th>[`Customer`]</th>
-                            <th class="nowrap align-right">[`Total`]</th>
-                            <th>[`Shipping`]</th>
-                            <th>[`Payment`]</th>
+                            <th>Заказ</th>
+                            <th>Дата</th>
+                            <th>Покупатель</th>
+                            <th>Адрес доставки</th>
+                            <th class="nowrap align-right">Итого</th>
+                            <th>Доставка</th>
+                            <th>Оплата</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {foreach from=$orders item=order}
-                        <tr class="order" data-order-id="{$order.id}">
-                            <td style="{$order.style}"><input type="checkbox"></td>
-                            <td style="width: 70px;{$order.style}">
+                        {foreach from=$orders item=_order}
+                        <tr class="order" data-order-id="{$_order.id}">
+                            <td style="{$_order.style}">
+                                <input type="checkbox" name="orders[{$_order.id}]" value="1" />
+                            </td>
+                            <td style="width: 70px;{$_order.style}">
                                 <div>
-                                    <a href="#/order/{$order.id}/">
-                                        <i class="{$order.icon}"></i><span {if $order.state_id == 'new'} class="highlighted"{/if}>{$order.id_str}</span>
+                                    <a href="#/order/{$_order.id}/">
+                                        <i class="{$_order.icon}"></i><span {if $_order.state_id == 'new'} class="highlighted"{/if}>{$_order.id_str}</span>
                                     </a>
                                 </div>
                             </td>
-                            <td style="{$order.style}">
-                              {$order.create_datetime_str}
-
+                            <td style="{$_order.style}">
+                              {$_order.create_datetime_str}
                             </td>
-                            <td style="{$order.style}">
-                                {$order.contact.name}</a>
+                            <td style="{$_order.style}">
+                                {$_order.contact.name}</a>
                             </td>
-                            <td style="{$order.style}">
-                                    {$order.shipping_address_formatted}
+                            <td style="{$_order.style}">
+                                    {$_order.shipping_address_formatted}
                             </td>
-                            <td style="{$order.style}" class="nowrap align-right">
-                                <div><a href="#/order/{$order.id}/">{$order.total_str}</a>
+                            <td style="{$_order.style}" class="nowrap align-right">
+                                <div><a href="#/order/{$_order.id}/">{$_order.total_str}</a>
                                 </div>
                             </td>
-                            <td style="{$order.style}">
-                                {$order.shipping_name}
+                            <td style="{$_order.style}">
+                                {$_order.shipping_name}
                             </td>   
-                            <td style="{$order.style}">
-                                {$order.payment_name}
+                            <td style="{$_order.style}">
+                                {$_order.payment_name}
                             </td>
                         </tr>
                         {/foreach}
@@ -56,14 +63,11 @@
         </div>
         <div class="dialog-buttons">
             <div class="dialog-buttons-gradient">
-                <input type="submit" value="[`Save`]" class="button green">
-                <i class="icon16 loading"></i>
-                [`or`] <a class="cancel" href="#">[`cancel`]</a>
+                <input type="submit" value="Сохранить" class="button green">
+                <i class="icon16 loading" style="display:none;"></i>
+                <a class="cancel" href="#">Отмена</a>
+                <a style="display:none;" class="close" href="{$wa_url}webasyst/shop/?action=orders">Закрыть</a>
             </div>
         </div>
-        {$wa->csrf()}
     </div>
 </form>
-
-
-

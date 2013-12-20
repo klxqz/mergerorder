@@ -8,12 +8,11 @@
 </li>
 
 
-<script>
-
+<script type="text/javascript">
     $(document).ready(function() {
         $('#s-edit-merge').click(function() {
             $(this).find('i.loading').show();
-            var url = '?plugin=mergerorder&action=dialog';
+            var url = '?plugin=mergerorder&action=dialog&order_id={$order.id}';
             $.ajax({
                 type: 'GET',
                 url: url,
@@ -36,12 +35,27 @@
                     $('#s-edit-merge').find('i.loading').hide();
                 },
                 onSubmit: function(d) {
-
+                    var $this = $(this);
+                    $this.find('i.loading').show();
+                    $.ajax({
+                        type: 'POST',
+                        url: $this.attr('action'),
+                        data: $this.serialize(),
+                        dataType: 'json',
+                        success: function(data, textStatus, jqXHR) {
+                            if (data.status == 'ok') {
+                                $this.find('.dialog-content-indent').html(data.data);
+                                $this.find('.dialog-buttons input').hide();
+                                $this.find('.dialog-buttons .cancel').hide();
+                                $this.find('.dialog-buttons .close').show();
+                                $this.find('i.loading').hide();
+                            }
+                        }
+                    });
                     return false;
                 }
             });
         }
 
     });
-
 </script>
