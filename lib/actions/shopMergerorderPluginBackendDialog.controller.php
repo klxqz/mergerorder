@@ -9,7 +9,7 @@ class shopMergerorderPluginBackendDialogController extends waJsonController {
         $order_model = new shopOrderModel();
         $order = $order_model->getOrder($order_id);
         $order = shopHelper::workupOrders($order, true);
-    
+
         $orders = $this->getOrders();
         foreach ($orders as $index => $_order) {
             if ($_order['id'] == $order_id) {
@@ -23,10 +23,18 @@ class shopMergerorderPluginBackendDialogController extends waJsonController {
         $this->response = $html;
     }
 
-    public function getOrders() {
+    public function getOrders($offset = 0, $limit = 50) {
+
+        $app_settings_model = new waAppSettingsModel();
+        $settings = $app_settings_model->get(array('shop', 'mergerorder'));
+        $settings['states'] = json_decode($settings['states'], true);
 
         $model = new shopOrderModel();
-        $orders = $model->getList("*,items.name,items.type,items.quantity,contact,params");
+        $orders = $model->getList("*,items.name,items.type,items.quantity,contact,params", array(
+            'offset' => $offset,
+            'limit' => $limit,
+            'where' => array('state_id' => array_keys($settings['states'])))
+        );
         shopHelper::workupOrders($orders);
 
         return $orders;

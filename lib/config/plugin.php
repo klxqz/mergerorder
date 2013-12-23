@@ -5,8 +5,8 @@ return array(
     'description' => 'позволяет объединить несколько заказов в один',
     'vendor' => '985310',
     'version' => '1.0.0',
-    'img' => 'img/sale.png',
-    'shop_settings' => false,
+    'img' => 'img/mergerorder.png',
+    'shop_settings' => true,
     'frontend' => false,
     'handlers' => array(
         'backend_order' => 'backendOrder'
