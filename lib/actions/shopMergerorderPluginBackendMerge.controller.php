@@ -2,7 +2,10 @@
 
 class shopMergerorderPluginBackendMergeController extends waJsonController {
 
+    protected $workflow;
+
     public function execute() {
+        $app_settings_model = new waAppSettingsModel();
         $order_model = new shopOrderModel();
         $log_model = new shopOrderLogModel();
         $order_id = waRequest::post('order_id', null, waRequest::TYPE_INT);
@@ -14,6 +17,8 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
         foreach (array_keys($orders) as $_order_id) {
             $orders_str[] = shopHelper::encodeOrderId($_order_id);
         }
+
+        $merged_orders = implode(', ', $orders_str);
 
         foreach (array_keys($orders) as $_order_id) {
             $_order = $order_model->getOrder($_order_id);
@@ -31,7 +36,7 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
                 'order_id' => $_order_id,
                 'before_state_id' => $order['state_id'],
                 'after_state_id' => 'delete',
-                'text' => "Удаление после объединения. Заказ $order_id_str объединен с " . implode(', ', $orders_str)
+                'text' => "Удаление после объединения. Заказ $order_id_str объединен с " . $merged_orders
             );
             $log_model->add($data);
             $order_model->delete($_order_id);
@@ -48,10 +53,13 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
             'order_id' => $order_id,
             'before_state_id' => $order['state_id'],
             'after_state_id' => $order['state_id'],
-            'text' => "Объединение заказов. Заказ $order_id_str объединен с " . implode(', ', $orders_str)
+            'text' => "Объединение заказов. Заказ $order_id_str объединен с " . $merged_orders
         );
         $log_model->add($data);
 
+        if ($app_settings_model->get(array('shop', 'mergerorder'), 'email_notification')) {
+            $this->sendNotification($order_id, $merged_orders);
+        }
         $this->response = '<h1>Заказы успешно объединены</h1>';
     }
 
@@ -64,6 +72,121 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
             return $total;
         }
         return $total - $data['discount'] + $data['shipping'];
+    }
+
+    public function sendNotification($order_id, $merged_orders) {
+        $app_settings_model = new waAppSettingsModel();
+        $order_model = new shopOrderModel();
+        $order_id_str = shopHelper::encodeOrderId($order_id);
+        $notification = array(
+            'name' => 'Объединение заказов',
+            'to' => 'customer',
+            'sms' => '',
+            'subject' => "Заказ $order_id_str объединен с $merged_orders",
+            'body' => $app_settings_model->get(array('shop', 'mergerorder'), 'body'),
+        );
+
+        $order = $order_model->getById($order_id);
+
+        $action_data = array();
+        $action_data['order_id'] = $order_id;
+        $action_data['action_id'] = 'comment';
+        $action_data['before_state_id'] = $order['state_id'];
+        $action_data['after_state_id'] = $order['state_id'];
+
+        $data = array(
+            'order' => $order,
+            'customer' => new waContact($order['contact_id']),
+            'status' => $this->getWorkflow()->getStateById($action_data['after_state_id'])->getName(),
+            'action_data' => $action_data,
+            'merged_orders' => $merged_orders,
+        );
+
+
+        $params_model = new shopOrderParamsModel();
+        $data['order']['params'] = $params_model->get($data['order']['id']);
+        $items_model = new shopOrderItemsModel();
+        $data['order']['items'] = $items_model->getItems($data['order']['id']);
+        foreach ($data['order']['items'] as &$i) {
+            if (!empty($i['file_name'])) {
+                $i['download_link'] = wa()->getRouteUrl('/frontend/myOrderDownload', array('id' => $data['order']['id'], 'code' => $data['order']['params']['auth_code'], 'item' => $i['id']), true);
+            }
+        }
+        unset($i);
+        if (!empty($data['order']['params']['shipping_id'])) {
+            try {
+                $data['shipping_plugin'] = shopShipping::getPlugin($data['order']['params']['shipping_plugin'], $data['order']['params']['shipping_id']);
+            } catch (waException $e) {
+                
+            }
+        }
+
+
+        $this->sendEmail($notification, $data);
+    }
+
+    protected function sendEmail($n, $data) {
+        $general = wa('shop')->getConfig()->getGeneralSettings();
+        /**
+         * @var waContact $customer
+         */
+        $customer = $data['customer'];
+        if ($n['to'] == 'customer') {
+            $email = $customer->get('email', 'default');
+            if (!$email) {
+                return;
+            }
+            $to = array($email);
+            $log = sprintf(_w("Notification <strong>%s</strong> sent to customer."), $n['name']);
+        } elseif ($n['to'] == 'admin') {
+            if (!$general['email']) {
+                return;
+            }
+            $to = array($general['email']);
+            $log = sprintf(_w("Notification <strong>%s</strong> sent to store admin."), $n['name']);
+        } else {
+            $to = explode(',', $n['to']);
+            $log = sprintf(_w("Notification <strong>%s</strong> sent to %s."), $n['name'], $n['to']);
+        }
+
+        $view = wa()->getView();
+
+        foreach (array('shipping', 'billing') as $k) {
+            $address = shopHelper::getOrderAddress($data['order']['params'], $k);
+            $formatter = new waContactAddressOneLineFormatter(array('image' => false));
+            $address = $formatter->format(array('data' => $address));
+            $view->assign($k . '_address', $address['value']);
+        }
+        $order_id = $data['order']['id'];
+        $data['order']['id'] = shopHelper::encodeOrderId($order_id);
+        $view->assign('order_url', wa()->getRouteUrl('/frontend/myOrderByCode', array('id' => $order_id, 'code' => $data['order']['params']['auth_code']), true));
+        $view->assign($data);
+        $subject = $view->fetch('string:' . $n['subject']);
+        $body = $view->fetch('string:' . $n['body']);
+
+        $message = new waMailMessage($subject, $body);
+        $message->setTo($to);
+        if ($general['email']) {
+            $message->setFrom($general['email'], $general['name']);
+        }
+        if ($message->send()) {
+            $order_log_model = new shopOrderLogModel();
+            $order_log_model->add(array(
+                'order_id' => $order_id,
+                'contact_id' => null,
+                'action_id' => '',
+                'text' => '<i class="icon16 email"></i> ' . $log,
+                'before_state_id' => $data['order']['state_id'],
+                'after_state_id' => $data['order']['state_id'],
+            ));
+        }
+    }
+
+    public function getWorkflow() {
+        if (!$this->workflow) {
+            $this->workflow = new shopWorkflow();
+        }
+        return $this->workflow;
     }
 
 }

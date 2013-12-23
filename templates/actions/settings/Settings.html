@@ -2,6 +2,14 @@
     .s-checkbox{
         margin-right: 25px !important;
     }
+    #wa .CodeMirror{
+        border: 1px solid #eee;
+    }
+    .CodeMirror-scroll {
+        height: auto;
+        overflow-y: hidden;
+        overflow-x: auto;
+    }
 </style>
 <h1>Объединение заказов</h1>
 <div     class="fields form">
@@ -28,7 +36,7 @@
                 <ul class="menu-v stack with-icons">
                     {foreach $states as $id => $s}
                     <li>
-                        <input {if $settings.states[$id]}checked="checked"{/if} class="s-checkbox" type="checkbox" name="shop_mergerorder[states][{$id}]" value="1"/>
+                        <input {if isset($settings.states[$id]) && $settings.states[$id]}checked="checked"{/if} class="s-checkbox" type="checkbox" name="shop_mergerorder[states][{$id}]" value="1"/>
                             <span style="{$s->getStyle()}">
                             <i class="{$s->getOption('icon')}"></i>{$s->getName()}
                         </span>
@@ -39,6 +47,31 @@
             </div>
         </div>
 
+
+        <div class="field">
+            <div class="name">
+                Уведомление по E-mail
+            </div>
+            <div class="value">
+                <select name="shop_mergerorder[email_notification]">
+                    <option {if $settings.email_notification == 1} selected="selected"{/if} value="1">Да</option>
+                    <option {if $settings.email_notification == 0} selected="selected"{/if} value="0">Нет</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="name">
+                Текст сообщения<br><span class="hint">HTML + Smarty</span>
+            </div>
+            <div class="value no-shift">
+                <div id="s-editor-core-wrapper">
+                    <textarea id="sf-template" class="body" name="shop_mergerorder[body]">{$settings.body|escape}</textarea>
+                    <p>{ldelim}$merged_orders{rdelim}  - Список объединенных заказов.</p>
+                    
+                </div>
+            </div>
+        </div>
 
 
 
@@ -52,3 +85,37 @@
         </div>
     </form>
 </div>
+
+<script type="text/javascript">
+    $(function() {
+
+        var c = CodeMirror.fromTextArea(document.getElementById('sf-template'), {
+            mode: "text/html",
+            tabMode: "indent",
+            height: "dynamic",
+            lineWrapping: true
+        });
+        $("#sf-template").change(function() {
+            c.setValue($(this).val())
+        });
+        $("#sf-settings").submit(function() {
+            var f = $(this);
+            $.post(f.attr('action'), f.serialize(), function(response) {
+                if (response.status == 'ok') {
+                    $('#wa-design-button').removeClass('red').addClass('green');
+                    $("#wa-editor-status-fail").hide()
+                    $("#wa-editor-status-ok span").html(response.data.message);
+                    $("#wa-editor-status-ok").fadeIn('slow', function() {
+                        $(this).fadeOut(1000);
+                    });
+                } else {
+                    $('#wa-design-button').removeClass('green').addClass('red');
+                    $("#wa-editor-status-ok").hide();
+                    $("#wa-editor-status-fail span").html(response.errors.join(', '));
+                    $("#wa-editor-status-fail").fadeIn('slow');
+                }
+            }, "json")
+            return false;
+        });
+    });
+</script>
