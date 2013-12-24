@@ -4,10 +4,15 @@
     <div class="dialog-window">
         <div class="dialog-content">
             <div class="dialog-content-indent">
-                
+
                 <h1>Объединение заказа {$order.id_str}</h1>
+                <div>{$order.contact.name} 
+                    <i class="icon16 email"></i><a class="inline" href="mailto:{$order.contact.email}">{$order.contact.email}</a>
+                </div>
+                <div>{$order.shipping_address_formatted}</div>
+                <br>
                 <input type="hidden" name="order_id" value="{$order.id}"/>
-                
+
                 <table class="zebra single-lined padded" id="order-list">
                     <thead>
                         <tr class="header">
@@ -27,25 +32,24 @@
                             <td style="{$_order.style}">
                                 <input type="checkbox" name="orders[{$_order.id}]" value="1" />
                             </td>
-                            <td style="width: 70px;{$_order.style}">
+                            <td style="{$_order.style}">
                                 <div>
-                                    <a href="#/order/{$_order.id}/">
+                                    <a href="#/order/{$_order.id}/" style="width: 70px;">
                                         <i class="{$_order.icon}"></i><span {if $_order.state_id == 'new'} class="highlighted"{/if}>{$_order.id_str}</span>
                                     </a>
                                 </div>
                             </td>
                             <td style="{$_order.style}">
-                              {$_order.create_datetime_str}
+                                {$_order.create_datetime_str}
                             </td>
                             <td style="{$_order.style}">
-                                {$_order.contact.name}</a>
+                                {$_order.contact.name}
                             </td>
                             <td style="{$_order.style}">
-                                    {$_order.shipping_address_formatted}
+                                {$_order.shipping_address_formatted}
                             </td>
                             <td style="{$_order.style}" class="nowrap align-right">
-                                <div><a href="#/order/{$_order.id}/">{$_order.total_str}</a>
-                                </div>
+                                {$_order.total_str}
                             </td>
                             <td style="{$_order.style}">
                                 {$_order.shipping_name}
