@@ -49,8 +49,8 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
             }
 
             $order['total'] = $this->calcTotal($order);
-            $order_model->update($order, $order_id);
-
+            $plugin_order_model = new shopMergerorderPluginOrderModel();
+            $plugin_order_model->update($order, $order_id);
 
             $log = $log_model->getLog($order_id);
 
