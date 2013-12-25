@@ -5,6 +5,8 @@ class shopMergerorderPluginBackendDialogController extends waJsonController {
     protected $tmp_path = 'plugins/mergerorder/templates/mergerorder.html';
 
     public function execute() {
+        $app_settings_model = new waAppSettingsModel();
+        $email_notification = $app_settings_model->get(array('shop', 'mergerorder'), 'email_notification');
         $order_id = waRequest::request('order_id');
         $order_model = new shopOrderModel();
         $order = $order_model->getOrder($order_id);
@@ -17,6 +19,7 @@ class shopMergerorderPluginBackendDialogController extends waJsonController {
             }
         }
         $view = wa()->getView();
+        $view->assign('email_notification', $email_notification);
         $view->assign('order', $order);
         $view->assign('orders', $orders);
         $html = $view->fetch('plugins/mergerorder/templates/Dialog.html');

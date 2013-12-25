@@ -7,7 +7,6 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
     public function execute() {
 
         try {
-            $app_settings_model = new waAppSettingsModel();
             $order_model = new shopOrderModel();
             $log_model = new shopOrderLogModel();
             $order_id = waRequest::post('order_id', null, waRequest::TYPE_INT);
@@ -63,7 +62,7 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
             );
             $log_model->add($data);
 
-            if ($app_settings_model->get(array('shop', 'mergerorder'), 'email_notification')) {
+            if (waRequest::post('email_notification')) {
                 $this->sendNotification($order_id, $merged_orders);
             }
             $this->response = '<h1>Заказы успешно объединены</h1>';
