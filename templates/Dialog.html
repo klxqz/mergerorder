@@ -67,13 +67,21 @@
         </div>
         <div class="dialog-buttons">
             <div class="dialog-buttons-gradient">
-                <span><input type="checkbox" {if $email_notification}checked="checked"{/if} name="email_notification" value="1"/> Уведомление по E-mail</span>
+                <span class="s-notification"><input type="checkbox" {if $email_notification}checked="checked"{/if} name="email_notification" value="1"/> Уведомление по E-mail</span>
                 <input type="submit" value="Объединить" class="button green">
                 <i class="icon16 loading" style="display:none;"></i>
                 <a class="cancel" href="#">Отмена</a>
-                <a style="display:none;" class="close" href="{$wa_url}webasyst/shop/?action=orders">Закрыть</a>
+                <a style="display:none;" class="close" href="#">Закрыть</a>
                 <span style="display:none;" class="mergerorder-response"></span>
             </div>
         </div>
     </div>
-</form>
+</form>        
+<script type="text/javascript">
+    $(function() {
+        $('.dialog-buttons .close').click(function() {
+            location.reload();
+            return false;
+        });
+    });
+</script>

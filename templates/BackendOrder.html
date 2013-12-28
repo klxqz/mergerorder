@@ -44,6 +44,7 @@
                                 if (data.status == 'ok') {
                                     $this.find('.dialog-content-indent').html(data.data);
                                     $this.find('.dialog-buttons input').hide();
+                                    $this.find('.dialog-buttons .s-notification').hide();
                                     $this.find('.dialog-buttons .cancel').hide();
                                     $this.find('.dialog-buttons .close').show();
                                     $this.find('i.loading').hide();
@@ -63,7 +64,7 @@
                     }
                 });
             }
-
+            
         });
     </script>
 </li>
