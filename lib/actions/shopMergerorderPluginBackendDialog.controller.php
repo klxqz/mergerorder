@@ -12,7 +12,7 @@ class shopMergerorderPluginBackendDialogController extends waJsonController {
         $order = $order_model->getOrder($order_id);
         $order = shopHelper::workupOrders($order, true);
 
-        $orders = $this->getOrders();
+        $orders = $this->getOrders(0, 999);
         foreach ($orders as $index => $_order) {
             if ($_order['id'] == $order_id) {
                 unset($orders[$index]);
