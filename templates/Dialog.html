@@ -33,8 +33,8 @@
                                 <input type="checkbox" name="orders[{$_order.id}]" value="1" />
                             </td>
                             <td style="{$_order.style}">
-                                <div>
-                                    <a href="#/order/{$_order.id}/" style="width: 70px;">
+                                <div style="min-width: 100px;">
+                                    <a href="#/order/{$_order.id}/">
                                         <i class="{$_order.icon}"></i><span {if $_order.state_id == 'new'} class="highlighted"{/if}>{$_order.id_str}</span>
                                     </a>
                                 </div>
