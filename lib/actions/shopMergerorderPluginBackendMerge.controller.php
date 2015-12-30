@@ -32,6 +32,7 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
                     unset($item['id']);
                     unset($item['order_id']);
                     $item['price'] = shop_currency($item['price'], $_order['currency'], $order['currency'], false);
+                    $item['name'] = htmlspecialchars_decode($item['name']);
                 }
                 $order['items'] = array_merge($order['items'], $items);
                 $order['discount'] += shop_currency($_order['discount'], $_order['currency'], $order['currency'], false);
