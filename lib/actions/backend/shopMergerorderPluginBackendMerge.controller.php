@@ -2,40 +2,36 @@
 
 class shopMergerorderPluginBackendMergeController extends waJsonController {
 
-    protected $workflow;
-
     public function execute() {
 
         try {
+            $order_id = waRequest::post('order_id', null, waRequest::TYPE_INT);
+            $orders = waRequest::post('orders');
+            $shipping = waRequest::post('shipping');
+            $discount = waRequest::post('discount');
+            if (!$orders) {
+                throw new Exception('Необходимо выбрать заказы для объединения');
+            }
+
             $order_model = new shopOrderModel();
             $log_model = new shopOrderLogModel();
-            $order_id = waRequest::post('order_id', null, waRequest::TYPE_INT);
+
             $order_id_str = shopHelper::encodeOrderId($order_id);
-            $order = $order_model->getOrder($order_id);
+            $order = $order_model->getOrder($order_id, false, false);
 
-            $orders = waRequest::post('orders');
-            if (!$orders) {
-                $this->errors = 'Необходимо выбрать заказы для объединения';
-                return false;
-            }
-            $orders_str = array();
-            foreach (array_keys($orders) as $_order_id) {
-                $orders_str[] = shopHelper::encodeOrderId($_order_id);
-            }
+            $merged_orders = implode(', ', array_map(array('shopHelper', 'encodeOrderId'), $orders));
 
-            $merged_orders = implode(', ', $orders_str);
+            $workflow = new shopWorkflow();
 
-            foreach (array_keys($orders) as $_order_id) {
-                $_order = $order_model->getOrder($_order_id);
+            foreach ($orders as $_order_id) {
+                $_order = $order_model->getOrder($_order_id, false, false);
                 $items = $_order['items'];
                 foreach ($items as &$item) {
                     unset($item['id']);
                     unset($item['order_id']);
                     $item['price'] = shop_currency($item['price'], $_order['currency'], $order['currency'], false);
-                    $item['name'] = htmlspecialchars_decode($item['name']);
                 }
                 $order['items'] = array_merge($order['items'], $items);
-                $order['discount'] += shop_currency($_order['discount'], $_order['currency'], $order['currency'], false);
 
                 $data = array(
                     'action_id' => 'comment',
@@ -45,14 +41,8 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
                     'text' => "Удаление после объединения. Заказ $order_id_str объединен с " . $merged_orders
                 );
                 $log_model->add($data);
-                $order_model->delete($_order_id);
+                $workflow->getActionById('delete')->run($_order_id);
             }
-
-            $order['total'] = $this->calcTotal($order);
-            $plugin_order_model = new shopMergerorderPluginOrderModel();
-            $plugin_order_model->update($order, $order_id);
-
-            $log = $log_model->getLog($order_id);
 
             $data = array(
                 'action_id' => 'comment',
@@ -63,6 +53,10 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
             );
             $log_model->add($data);
 
+            $order['shipping'] = $shipping;
+            $order['discount'] = $discount;
+            $workflow->getActionById('edit')->run($order);
+
             if (waRequest::post('email_notification')) {
                 $this->sendNotification($order_id, $merged_orders);
             }
@@ -70,17 +64,6 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
         } catch (Exception $e) {
             $this->errors = $e->getMessage();
         }
-    }
-
-    public function calcTotal($data) {
-        $total = 0;
-        foreach ($data['items'] as $item) {
-            $total += $item['price'] * (int) $item['quantity'];
-        }
-        if ($total == 0) {
-            return $total;
-        }
-        return $total - $data['discount'] + $data['shipping'];
     }
 
     public function sendNotification($order_id, $merged_orders) {
@@ -103,10 +86,12 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
         $action_data['before_state_id'] = $order['state_id'];
         $action_data['after_state_id'] = $order['state_id'];
 
+        $workflow = new shopWorkflow();
+
         $data = array(
             'order' => $order,
             'customer' => new waContact($order['contact_id']),
-            'status' => $this->getWorkflow()->getStateById($action_data['after_state_id'])->getName(),
+            'status' => $workflow->getStateById($action_data['after_state_id'])->getName(),
             'action_data' => $action_data,
             'merged_orders' => $merged_orders,
         );
@@ -189,13 +174,6 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
                 'after_state_id' => $data['order']['state_id'],
             ));
         }
-    }
-
-    public function getWorkflow() {
-        if (!$this->workflow) {
-            $this->workflow = new shopWorkflow();
-        }
-        return $this->workflow;
     }
 
 }

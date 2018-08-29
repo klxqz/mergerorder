@@ -12,3 +12,5 @@ $app_settings_model->set($plugin_id, 'body', '<p>Здравствуйте, {$cus
         '{$wa->shop->settings("name")|escape}<br>' . "\r\n" .
         '<a href="mailto:{$wa->shop->settings("email")}">{$wa->shop->settings("email")}</a><br>' . "\r\n" .
         '{$wa->shop->settings("phone")}<br></p>');
+$app_settings_model->set($plugin_id, 'shipping', 'auto');
+$app_settings_model->set($plugin_id, 'discount', 'auto');

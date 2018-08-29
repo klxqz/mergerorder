@@ -2,9 +2,9 @@
 
 return array(
     'name' => 'Объединение заказов',
-    'description' => 'позволяет объединить несколько заказов в один',
+    'description' => 'Позволяет объединить несколько заказов в один',
     'vendor' => '985310',
-    'version' => '1.0.3',
+    'version' => '2.0.0',
     'img' => 'img/mergerorder.png',
     'shop_settings' => true,
     'frontend' => false,

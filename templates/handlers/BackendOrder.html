@@ -1,0 +1,44 @@
+<li>
+    <a id="s-edit-merge" href="?plugin=mergerorder&action=dialog&order_id={$order.id}">
+        <i class="icon16 merge"></i> Объединение заказов
+    </a>
+
+    <div style="display: none;" id="mergerorder-dialog"></div>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var p = $('<div></div>').append($('#mergerorder-dialog'));
+            p.appendTo('body');
+
+            $('#s-edit-merge').click(function () {
+                if ($('#mergerorder-dialog .dialog-content-indent').length) {
+                    $('#mergerorder-dialog .dialog-content-indent').html('<i class="icon16 loading"></i>');
+                } else {
+                    $('#mergerorder-dialog').html('<i class="icon16 loading"></i>');
+                }
+                var dialog = $('#mergerorder-dialog').waDialog({
+                    disableButtonsOnSubmit: false,
+                    buttons: $('<input type="submit" class="button green" value="Закрыть">').click(function () {
+                        dialog.trigger('close');
+                    }),
+                    onSubmit: function (d) {
+                        return false;
+                    }
+                });
+                $.ajax({
+                    type: 'GET',
+                    url: $(this).attr('href'),
+                    dataType: 'html',
+                    success: function (html) {
+                        if ($(html).find('.dialog-window').length) {
+                            $('#mergerorder-dialog').html(html);
+                        } else {
+                            $('#mergerorder-dialog .dialog-content-indent').html(html);
+                        }
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+</li>
