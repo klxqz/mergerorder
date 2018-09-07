@@ -22,7 +22,7 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
             $merged_orders = implode(', ', array_map(array('shopHelper', 'encodeOrderId'), $orders));
 
             $workflow = new shopWorkflow();
-
+            $_POST['notifications'] = 'silent';
             foreach ($orders as $_order_id) {
                 $_order = $order_model->getOrder($_order_id, false, false);
                 $items = $_order['items'];
@@ -67,7 +67,7 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
     }
 
     public function sendNotification($order_id, $merged_orders) {
-        $app_settings_model = new waAppSettingsModel();
+        $plugin = wa('shop')->getPlugin('mergerorder');
         $order_model = new shopOrderModel();
         $order_id_str = shopHelper::encodeOrderId($order_id);
         $notification = array(
@@ -75,7 +75,7 @@ class shopMergerorderPluginBackendMergeController extends waJsonController {
             'to' => 'customer',
             'sms' => '',
             'subject' => "Заказ $order_id_str объединен с $merged_orders",
-            'body' => $app_settings_model->get(array('shop', 'mergerorder'), 'body'),
+            'body' => $plugin->getSettings('body'),
         );
 
         $order = $order_model->getById($order_id);
