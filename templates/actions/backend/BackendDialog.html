@@ -6,8 +6,9 @@
             <div class="dialog-content-indent">
 
                 <h1>Объединение заказа {$order.id_str}</h1>
-                <div>{$order.contact.name} 
-                    <i class="icon16 email"></i><a class="inline" href="mailto:{$order.contact.email}">{$order.contact.email}</a>
+                <div>{$order.contact.name}
+                    <i class="icon16 email"></i><a class="inline"
+                                                   href="mailto:{$order.contact.email}">{$order.contact.email}</a>
                 </div>
                 <div>{$order.shipping_address_formatted}</div>
                 <br>
@@ -18,7 +19,8 @@
                         Доставка
                     </div>
                     <div class="value">
-                        <input class="short numerical" type="text" name="shipping" placeholder="0" value="{(float)$order.shipping|escape}" />
+                        <input class="short numerical" type="text" name="shipping" placeholder="0"
+                               value="{(float)$order.shipping|escape}"/>
                     </div>
                 </div>
                 <div class="field">
@@ -26,65 +28,80 @@
                         Скидка
                     </div>
                     <div class="value">
-                        <input class="short numerical" type="text" name="discount" placeholder="0" value="{(float)$order.discount|escape}" />
+                        <input class="short numerical" type="text" name="discount" placeholder="0"
+                               value="{(float)$order.discount|escape}"/>
                     </div>
                 </div>
 
                 <table class="zebra single-lined padded" id="order-list">
                     <thead>
-                        <tr class="header">
-                            <th></th>
-                            <th>Заказ</th>
-                            <th>Дата</th>
-                            <th>Покупатель</th>
-                            <th>Адрес доставки</th>
-                            <th class="nowrap align-right">Итого</th>
-                            <th>Доставка</th>
-                            <th>Оплата</th>
-                        </tr>
+                    <tr class="header">
+                        <th></th>
+                        <th>Заказ</th>
+                        <th>Дата</th>
+                        <th>Покупатель</th>
+                        <th>Адрес доставки</th>
+                        <th class="nowrap align-right">Итого</th>
+                        <th>Доставка</th>
+                        <th>Оплата</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {foreach from=$orders item=_order}
-                            <tr class="order" data-order-id="{$_order.id}">
-                                <td style="{$_order.style}">
-                                    <input type="checkbox" name="orders[]" value="{$_order.id}" />
-                                </td>
-                                <td style="{$_order.style}">
-                                    <div style="min-width: 100px;">
-                                        <a href="#/order/{$_order.id}/">
-                                            <i class="{$_order.icon}"></i><span {if $_order.state_id == 'new'} class="highlighted"{/if}>{$_order.id_str}</span>
-                                        </a>
-                                    </div>
-                                </td>
-                                <td style="{$_order.style}">
-                                    {$_order.create_datetime_str}
-                                </td>
-                                <td style="{$_order.style}">
-                                    {$_order.contact.name}
-                                </td>
-                                <td style="{$_order.style}">
-                                    {$_order.shipping_address_formatted}
-                                </td>
-                                <td style="{$_order.style}" class="nowrap align-right">
-                                    {$_order.total_str}
-                                </td>
-                                <td style="{$_order.style}">
-                                    {$_order.shipping_name}
-                                </td>   
-                                <td style="{$_order.style}">
-                                    {$_order.payment_name}
-                                </td>
-                            </tr>
-                        {/foreach}
-
+                    {foreach from=$orders item=_order}
+                        <tr class="order" data-order-id="{$_order.id}">
+                            <td style="{$_order.style}">
+                                <input type="checkbox" name="orders[]" value="{$_order.id}"/>
+                            </td>
+                            <td style="{$_order.style}">
+                                <div style="min-width: 100px;">
+                                    <a href="#/order/{$_order.id}/">
+                                        <i class="{$_order.icon}"></i><span {if $_order.state_id == 'new'} class="highlighted"{/if}>{$_order.id_str}</span>
+                                    </a>
+                                </div>
+                            </td>
+                            <td style="{$_order.style}">
+                                {$_order.create_datetime_str}
+                            </td>
+                            <td style="{$_order.style}">
+                                {$_order.contact.name}
+                            </td>
+                            <td style="{$_order.style}">
+                                {$_order.shipping_address_formatted}
+                            </td>
+                            <td style="{$_order.style}" class="nowrap align-right">
+                                {$_order.total_str}
+                            </td>
+                            <td style="{$_order.style}">
+                                {$_order.shipping_name}
+                            </td>
+                            <td style="{$_order.style}">
+                                {$_order.payment_name}
+                            </td>
+                        </tr>
+                    {/foreach}
                     </tbody>
+                    {if $count > $per_page}
+                        <tfoot>
+                        <tr>
+                            <td colspan="8" class="align-center">
+                                <a data-orders-count="{$count}" href="javascript:void(0);"
+                                   class="show-more-orders bold">
+                                    <i class="icon16 download"></i>Показать еще...
+                                    <i class="icon16 loading" style="display: none"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        </tfoot>
+                    {/if}
                 </table>
 
             </div>
         </div>
         <div class="dialog-buttons">
             <div class="dialog-buttons-gradient">
-                <span class="s-notification"><input type="checkbox" {if $email_notification}checked="checked"{/if} name="email_notification" value="1"/> Уведомление по E-mail</span>
+                <span class="s-notification"><input type="checkbox"
+                                                    {if $email_notification}checked="checked"{/if} name="email_notification"
+                                                    value="1"/> Уведомление по E-mail</span>
                 <input type="submit" value="Объединить" class="button green">
                 <i class="icon16 loading" style="display:none;"></i>
                 <a class="cancel" href="#">Отмена</a>
@@ -93,7 +110,7 @@
             </div>
         </div>
     </div>
-</form>        
+</form>
 <script type="text/javascript">
     $(function () {
         $('#order-list input[name="orders[]"]').change(function () {
@@ -162,5 +179,33 @@
             location.reload();
             return false;
         });
+
+        if ($('#mergerorder-dialog .show-more-orders').length) {
+            $('#mergerorder-dialog .show-more-orders').click(function (e) {
+                e.preventDefault();
+                var order_id = $('#mergerorder-form [name=order_id]').val();
+                var offset = $('#mergerorder-dialog table#order-list tbody tr.order').length;
+                var self = $(this);
+                var orders_count = self.data('orders-count');
+
+                self.find('.icon16.loading').show();
+                $.ajax({
+                    url: '?plugin=mergerorder&action=dialog&order_id=' + order_id + '&offset=' + offset,
+                    type: 'GET',
+                    dataType: 'html',
+                    success: function (data, textStatus) {
+                        self.find('.icon16.loading').hide();
+                        $('#mergerorder-dialog table#order-list tbody').append($(data).find('table#order-list tbody tr.order'));
+                        if ($('#mergerorder-dialog table#order-list tbody tr.order').length == orders_count) {
+                            self.closest('tfoot').hide();
+                        }
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        self.find('.icon16.loading').hide();
+                        alert(jqXHR.responseText);
+                    }
+                });
+            });
+        }
     });
 </script>
